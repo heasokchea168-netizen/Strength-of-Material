@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axial Deformation Calculator (Example 2.01)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: #1e293b;
+        }
+        /* ពង្រីកទទឹងសរុបសម្រាប់ប្លង់ផ្ដេក */
+        .main-wrapper {
+            width: 100%;
+            max-width: 1280px;
+        }
+        /* Header Banner លាតពេញខាងលើ */
+        .header-card {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            text-align: center;
+            padding: 18px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            margin-bottom: 20px;
+        }
+        .header-card h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .header-card p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* ប្លង់ ២ ជួរឈរ (ឆ្វេង៖ Input | ស្តាំ៖ Result + Live Diagram) */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 20px;
+            align-items: start;
+        }
+        /* ឱ្យផ្នែកខាងស្តាំជាប់លើអេក្រង់ពេល Scroll */
+        .right-panel {
+            position: sticky;
+            top: 20px;
+        }
+        /* បើបើកលើទូរស័ព្ទ ឱ្យធ្លាក់មកត្រង់វិញ */
+        @media (max-width: 960px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+            .right-panel {
+                position: static;
+            }
+        }
+
+        /* Main Blue Result Card */
+        .result-card {
+            background: linear-gradient(135deg, #1d4ed8, #0f369c);
+            color: white;
+            text-align: center;
+            padding: 22px 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(15, 54, 156, 0.25);
+            margin-bottom: 20px;
+        }
+        .result-label {
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin: 0;
+        }
+        .result-value {
+            font-size: 36px;
+            font-weight: 800;
+            margin: 6px 0 4px;
+        }
+        .result-sub {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+        .sub-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .sub-box {
+            background: rgba(255, 255, 255, 0.14);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .sub-box span {
+            display: block;
+            font-size: 11px;
+            opacity: 0.85;
+        }
+        .sub-box strong {
+            font-size: 15px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Form White Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        .card:last-child {
+            margin-bottom: 0;
+        }
+        .card-title {
+            color: #1d4ed8;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0f172a;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .info-bar {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        /* SVG Diagram Box */
+        .diagram-container {
+            width: 100%;
+            text-align: center;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- Header -->
+    <div class="header-card">
+        <h1>Axial Deformation Calculator</h1>
+        <p>Stepped Rod Internal Force, Stress & Live Diagram (Example 2.01)</p>
+    </div>
+
+    <!-- 2-Column Layout -->
+    <div class="layout-grid">
+        
+        <!-- ជួរឈរខាងឆ្វេង៖ Inputs -->
+        <div class="left-panel">
+            <!-- 1. Material & Geometry -->
+            <div class="card">
+                <h2 class="card-title">1. Material & Geometry Parameters</h2>
+                <div class="form-group">
+                    <label for="E">Modulus of Elasticity E (× 10⁶ psi)</label>
+                    <input type="number" id="E" value="29.0" step="0.5" oninput="calculate()">
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="L1">Length L₁ (in.)</label>
+                        <input type="number" id="L1" value="12.0" min="1" step="1" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="L2">Length L₂ (in.)</label>
+                        <input type="number" id="L2" value="12.0" min="1" step="1" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="L3">Length L₃ (in.)</label>
+                        <input type="number" id="L3" value="16.0" min="1" step="1" oninput="calculate()">
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="A1">Area A₁ (in²)</label>
+                        <input type="number" id="A1" value="0.9" min="0.05" step="0.05" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="A2">Area A₂ (in²)</label>
+                        <input type="number" id="A2" value="0.9" min="0.05" step="0.05" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="A3">Area A₃ (in²)</label>
+                        <input type="number" id="A3" value="0.3" min="0.05" step="0.05" oninput="calculate()">
+                    </div>
+                </div>
+
+                <div class="info-bar">
+                    <span id="total-length-info">Total Length: 40.00 in.</span>
+                    <span id="max-stress-info">Max Stress: 100.00 ksi</span>
+                </div>
+            </div>
+
+            <!-- 2. External Loads -->
+            <div class="card">
+                <h2 class="card-title">2. External Applied Loads (kips) — (+ Right / - Left)</h2>
+                <div class="grid-3">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="FB">Load at B (kips)</label>
+                        <input type="number" id="FB" value="75.0" step="5" oninput="calculate()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="FC">Load at C (kips)</label>
+                        <input type="number" id="FC" value="-45.0" step="5" oninput="calculate()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="FD">Load at D (kips)</label>
+                        <input type="number" id="FD" value="30.0" step="5" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ជួរឈរខាងស្តាំ៖ Result + Live Diagram -->
+        <div class="right-panel">
+            <!-- Main Result Banner -->
+            <div class="result-card">
+                <p class="result-label">Total Axial Deformation (δ)</p>
+                <div class="result-value" id="total-delta-display">75.86 × 10⁻³ in.</div>
+                <div class="result-sub" id="exact-delta-display">(0.075862 in. — Elongation)</div>
+
+                <div class="sub-grid">
+                    <div class="sub-box">
+                        <span>Internal Force P₁ (AB)</span>
+                        <strong id="p1-display">+60.0 kips</strong>
+                    </div>
+                    <div class="sub-box">
+                        <span>Internal Force P₂ (BC)</span>
+                        <strong id="p2-display">-15.0 kips</strong>
+                    </div>
+                    <div class="sub-box">
+                        <span>Internal Force P₃ (CD)</span>
+                        <strong id="p3-display">+30.0 kips</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Live Diagram -->
+            <div class="card">
+                <h2 class="card-title">3. Live Stepped Rod & Axial Force Diagram</h2>
+                <div class="diagram-container">
+                    <svg id="live-svg" viewBox="0 0 640 350"></svg>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const E = parseFloat(document.getElementById('E').value) * 1e6 || 29e6;
+        const L1 = Math.max(1, parseFloat(document.getElementById('L1').value) || 1);
+        const L2 = Math.max(1, parseFloat(document.getElementById('L2').value) || 1);
+        const L3 = Math.max(1, parseFloat(document.getElementById('L3').value) || 1);
+
+        const A1 = Math.max(0.01, parseFloat(document.getElementById('A1').value) || 0.1);
+        const A2 = Math.max(0.01, parseFloat(document.getElementById('A2').value) || 0.1);
+        const A3 = Math.max(0.01, parseFloat(document.getElementById('A3').value) || 0.1);
+
+        const FB = parseFloat(document.getElementById('FB').value) || 0;
+        const FC = parseFloat(document.getElementById('FC').value) || 0;
+        const FD = parseFloat(document.getElementById('FD').value) || 0;
+
+        // គណនាកម្លាំងខាងក្នុង
+        const P3 = FD;
+        const P2 = FD + FC;
+        const P1 = FD + FC + FB;
+
+        // គណនា Deformation
+        const d1 = (P1 * 1000 * L1) / (A1 * E);
+        const d2 = (P2 * 1000 * L2) / (A2 * E);
+        const d3 = (P3 * 1000 * L3) / (A3 * E);
+        const totalDelta = d1 + d2 + d3;
+
+        // គណនា Stress អតិបរមា
+        const s1 = Math.abs(P1 / A1);
+        const s2 = Math.abs(P2 / A2);
+        const s3 = Math.abs(P3 / A3);
+        const maxStress = Math.max(s1, s2, s3);
+
+        const status = totalDelta >= 0 ? "Elongation" : "Contraction";
+        document.getElementById('total-delta-display').innerText = `${(totalDelta * 1000).toFixed(2)} × 10⁻³ in.`;
+        document.getElementById('exact-delta-display').innerText = `(${totalDelta.toFixed(6)} in. — ${status})`;
+
+        document.getElementById('p1-display').innerText = `${P1 >= 0 ? '+' : ''}${P1.toFixed(1)} kips`;
+        document.getElementById('p2-display').innerText = `${P2 >= 0 ? '+' : ''}${P2.toFixed(1)} kips`;
+        document.getElementById('p3-display').innerText = `${P3 >= 0 ? '+' : ''}${P3.toFixed(1)} kips`;
+
+        document.getElementById('total-length-info').innerText = `Total Length: ${(L1 + L2 + L3).toFixed(2)} in.`;
+        document.getElementById('max-stress-info').innerText = `Max Stress: ${maxStress.toFixed(2)} ksi`;
+
+        drawSVG(L1, L2, L3, A1, A2, A3, FB, FC, FD, P1, P2, P3);
+    }
+
+    function drawSVG(L1, L2, L3, A1, A2, A3, FB, FC, FD, P1, P2, P3) {
+        const svg = document.getElementById('live-svg');
+        const totalL = L1 + L2 + L3;
+        const startX = 65;
+        const drawWidth = 465;
+        const scaleX = drawWidth / totalL;
+
+        const xA = startX;
+        const xB = startX + L1 * scaleX;
+        const xC = xB + L2 * scaleX;
+        const xD = xC + L3 * scaleX;
+
+        const maxA = Math.max(A1, A2, A3);
+        const h1 = 22 + 34 * (A1 / maxA);
+        const h2 = 22 + 34 * (A2 / maxA);
+        const h3 = 22 + 34 * (A3 / maxA);
+        const rodY = 75;
+
+        let html = `
+            <defs>
+                <marker id="arrow-right" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+                </marker>
+                <marker id="arrow-left" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 10 1 L 0 5 L 10 9 z" fill="#dc2626"/>
+                </marker>
+                <pattern id="hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="#64748b" stroke-width="2" />
+                </pattern>
+            </defs>
+
+            <text x="10" y="18" font-size="12" font-weight="bold" fill="#334155">Stepped Rod & Applied Loads</text>
+
+            <!-- Fixed Wall -->
+            <rect x="${xA - 16}" y="${rodY - 42}" width="16" height="84" fill="url(#hatch)" stroke="#475569" stroke-width="1.5"/>
+            <line x1="${xA}" y1="${rodY - 42}" x2="${xA}" y2="${rodY + 42}" stroke="#1e293b" stroke-width="2.5"/>
+
+            <!-- Rod Segments -->
+            <rect x="${xA}" y="${rodY - h1/2}" width="${L1 * scaleX}" height="${h1}" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.5"/>
+            <rect x="${xB}" y="${rodY - h2/2}" width="${L2 * scaleX}" height="${h2}" fill="#60a5fa" stroke="#1d4ed8" stroke-width="1.5"/>
+            <rect x="${xC}" y="${rodY - h3/2}" width="${L3 * scaleX}" height="${h3}" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1.5"/>
+
+            <!-- Area Labels -->
+            <text x="${(xA+xB)/2}" y="${rodY + 4}" font-size="10" font-weight="bold" fill="#1e3a8a" text-anchor="middle">A₁=${A1}</text>
+            <text x="${(xB+xC)/2}" y="${rodY + 4}" font-size="10" font-weight="bold" fill="#1e3a8a" text-anchor="middle">A₂=${A2}</text>
+            <text x="${(xC+xD)/2}" y="${rodY + 4}" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">A₃=${A3}</text>
+
+            <!-- Points -->
+            <circle cx="${xA}" cy="${rodY}" r="3.5" fill="#0f172a"/>
+            <circle cx="${xB}" cy="${rodY}" r="3.5" fill="#0f172a"/>
+            <circle cx="${xC}" cy="${rodY}" r="3.5" fill="#0f172a"/>
+            <circle cx="${xD}" cy="${rodY}" r="3.5" fill="#0f172a"/>
+
+            <text x="${xA + 8}" y="${rodY + 42}" font-size="11" font-weight="bold" fill="#1e293b">A</text>
+            <text x="${xB}" y="${rodY + 42}" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle">B</text>
+            <text x="${xC}" y="${rodY + 42}" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle">C</text>
+            <text x="${xD}" y="${rodY + 42}" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle">D</text>
+        `;
+
+        function renderForceArrow(x, F, yOffset) {
+            if (F === 0) return '';
+            const len = 46;
+            if (F > 0) {
+                return `
+                    <line x1="${x}" y1="${rodY}" x2="${x + len}" y2="${rodY}" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrow-right)"/>
+                    <text x="${x + len/2}" y="${rodY - yOffset}" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">${Math.abs(F)}k</text>
+                `;
+            } else {
+                return `
+                    <line x1="${x}" y1="${rodY}" x2="${x - len}" y2="${rodY}" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrow-left)"/>
+                    <text x="${x - len/2}" y="${rodY - yOffset}" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">${Math.abs(F)}k</text>
+                `;
+            }
+        }
+
+        html += renderForceArrow(xB, FB, h1/2 + 8);
+        html += renderForceArrow(xC, FC, h2/2 + 8);
+        html += renderForceArrow(xD, FD, h3/2 + 8);
+
+        // --- Axial Force Diagram ---
+        const baseY = 248;
+        const maxP = Math.max(Math.abs(P1), Math.abs(P2), Math.abs(P3), 10);
+        const scaleY = 58 / maxP;
+
+        const y1 = baseY - P1 * scaleY;
+        const y2 = baseY - P2 * scaleY;
+        const y3 = baseY - P3 * scaleY;
+
+        html += `
+            <line x1="10" y1="145" x2="630" y2="145" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="10" y="168" font-size="12" font-weight="bold" fill="#334155">Internal Axial Force Diagram (P)</text>
+
+            <!-- Dashed lines -->
+            <line x1="${xA}" y1="${rodY + 46}" x2="${xA}" y2="335" stroke="#cbd5e1" stroke-dasharray="4"/>
+            <line x1="${xB}" y1="${rodY + 46}" x2="${xB}" y2="335" stroke="#cbd5e1" stroke-dasharray="4"/>
+            <line x1="${xC}" y1="${rodY + 46}" x2="${xC}" y2="335" stroke="#cbd5e1" stroke-dasharray="4"/>
+            <line x1="${xD}" y1="${rodY + 46}" x2="${xD}" y2="335" stroke="#cbd5e1" stroke-dasharray="4"/>
+
+            <!-- Zero Axis -->
+            <line x1="${xA - 10}" y1="${baseY}" x2="${xD + 15}" y2="${baseY}" stroke="#64748b" stroke-width="1.5"/>
+
+            <!-- Shaded Regions -->
+            <rect x="${xA}" y="${Math.min(baseY, y1)}" width="${xB - xA}" height="${Math.abs(baseY - y1)}" fill="${P1 >= 0 ? 'rgba(37, 99, 235, 0.2)' : 'rgba(220, 38, 38, 0.2)'}"/>
+            <rect x="${xB}" y="${Math.min(baseY, y2)}" width="${xC - xB}" height="${Math.abs(baseY - y2)}" fill="${P2 >= 0 ? 'rgba(37, 99, 235, 0.2)' : 'rgba(220, 38, 38, 0.2)'}"/>
+            <rect x="${xC}" y="${Math.min(baseY, y3)}" width="${xD - xC}" height="${Math.abs(baseY - y3)}" fill="${P3 >= 0 ? 'rgba(37, 99, 235, 0.2)' : 'rgba(220, 38, 38, 0.2)'}"/>
+
+            <!-- Diagram Outline -->
+            <polyline points="${xA},${baseY} ${xA},${y1} ${xB},${y1} ${xB},${y2} ${xC},${y2} ${xC},${y3} ${xD},${y3} ${xD},${baseY}"
+                      fill="none" stroke="#1d4ed8" stroke-width="2.2"/>
+
+            <!-- Value Labels -->
+            <text x="${(xA+xB)/2}" y="${P1 >= 0 ? y1 - 6 : y1 + 14}" font-size="11" font-weight="bold" fill="${P1 >= 0 ? '#1d4ed8' : '#dc2626'}" text-anchor="middle">${P1 >= 0 ? '+' : ''}${P1.toFixed(1)}k</text>
+            <text x="${(xB+xC)/2}" y="${P2 >= 0 ? y2 - 6 : y2 + 14}" font-size="11" font-weight="bold" fill="${P2 >= 0 ? '#1d4ed8' : '#dc2626'}" text-anchor="middle">${P2 >= 0 ? '+' : ''}${P2.toFixed(1)}k</text>
+            <text x="${(xC+xD)/2}" y="${P3 >= 0 ? y3 - 6 : y3 + 14}" font-size="11" font-weight="bold" fill="${P3 >= 0 ? '#1d4ed8' : '#dc2626'}" text-anchor="middle">${P3 >= 0 ? '+' : ''}${P3.toFixed(1)}k</text>
+        `;
+
+        svg.innerHTML = html;
+    }
+
+    calculate();
+</script>
+
+</body>
+</html>
